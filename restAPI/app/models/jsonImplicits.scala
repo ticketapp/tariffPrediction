@@ -1,5 +1,6 @@
 package models
 
+import application.PredictionLabels
 import play.api.libs.json.{Format, Json}
 
 trait jsonImplicits {
@@ -12,4 +13,5 @@ trait jsonImplicits {
   implicit val organizerWithAddressFormat = Json.format[OrganizerWithAddress]
   implicit val eventFormat = Json.format[Event]
   implicit val eventWithRelationsFormat = Json.format[EventWithRelations]
+  implicit val predictionLabelsFormat = Json.format[PredictionLabels]
 }
