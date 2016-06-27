@@ -9,8 +9,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.language.postfixOps
 
-trait testHelper extends PlaySpec with BeforeAndAfterAll {
-
+trait testHelper extends PlaySpec {
   lazy val appBuilder = new GuiceApplicationBuilder().in(Mode.Test)
   lazy val injector = appBuilder.injector()
   lazy val injectorWithoutActors = appBuilder.injector

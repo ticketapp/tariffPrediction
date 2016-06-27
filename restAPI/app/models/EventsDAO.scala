@@ -17,10 +17,12 @@ class EventsDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
     val query = for {
       ((((eventWithOptionalEventOrganizers), optionalEventArtists), optionalEventPlaces), optionalEventAddresses) <-
         events.filter(_.facebookId === facebookId) joinLeft
-          (eventsOrganizers join organizers on (_.organizerId === _.id)) on (_.id === _._1.eventId) joinLeft
-          (eventsArtists join artists on (_.artistId === _.id)) on (_._1.id === _._1.eventId) joinLeft
-          (eventsPlaces join places on (_.placeId === _.id)) on (_._1._1.id === _._1.eventId) joinLeft
-          (eventsAddresses join addresses on (_.addressId === _.id)) on (_._1._1._1.id === _._1.eventId)
+          (eventsOrganizers join organizers on (_.organizerUrl === _.facebookUrl)) on
+            (_.facebookId === _._1.eventId) joinLeft
+          (eventsArtists join artists on (_.artistId === _.facebookId)) on (_._1.facebookId === _._1.eventId) joinLeft
+          (eventsPlaces join places on (_.placeFacebookUrl === _.facebookUrl)) on
+            (_._1._1.facebookId === _._1.eventId) joinLeft
+          (eventsAddresses join addresses on (_.addressId === _.id)) on (_._1._1._1.facebookId === _._1.eventId)
     } yield (eventWithOptionalEventOrganizers, optionalEventArtists, optionalEventPlaces, optionalEventAddresses)
 
     db.run(query.result) map(eventWithRelations =>

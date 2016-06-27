@@ -5,8 +5,8 @@ class EventTest extends testHelper {
   "An event" must {
 
     "be found" in {
-      whenReady(eventsDAO.find("182759945204685")) { event =>
-        event.get.event.facebookId mustBe Some("182759945204685")
+      whenReady(eventsDAO.find("212102035821858")) { event =>
+        event.get.event.facebookId mustBe "212102035821858"
       }
     }
   }

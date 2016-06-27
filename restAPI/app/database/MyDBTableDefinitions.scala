@@ -11,10 +11,10 @@ import slick.jdbc.{PositionedParameters, SetParameter}
 import slick.model.ForeignKeyAction
 
 
-case class EventArtistRelation(eventId: Long, artistId: Long)
-case class EventPlaceRelation(eventId: Long, placeId: Long)
-case class EventAddressRelation(eventId: Long, addressId: Long)
-case class EventOrganizerRelation(eventId: Long, organizerId: Long)
+case class EventArtistRelation(eventId: String, artistId: String)
+case class EventPlaceRelation(eventId: String, placeId: String)
+case class EventAddressRelation(eventId: String, addressId: Long)
+case class EventOrganizerRelation(eventId: String, organizerId: String)
 case class FrenchCity(city: String, geographicPoint: Geometry)
 
 trait MyDBTableDefinitions {
@@ -35,8 +35,7 @@ trait MyDBTableDefinitions {
   }
 
   class Artists(tag: Tag) extends Table[Artist](tag, "artists") {
-    def id = column[Long]("artistid", O.PrimaryKey, O.AutoInc)
-    def facebookId = column[Option[String]]("facebookid")
+    def facebookId = column[String]("facebookid", O.PrimaryKey)
     def name = column[String]("name")
     def imagePath = column[Option[String]]("imagepath")
     def description = column[Option[String]]("description")
@@ -46,19 +45,20 @@ trait MyDBTableDefinitions {
     def likes = column[Option[Long]]("likes")
     def country = column[Option[String]]("country")
 
-    def * = (id.?, facebookId, name, imagePath, description, facebookUrl, websites, hasTracks, likes, country).shaped <> (
-      { case (id, facebookId, name, imagePath, description, facebookUrl, websites, hasTracks, likes, country) =>
-        Artist(id, facebookId, name, imagePath, description, facebookUrl, optionStringToSet(websites), hasTracks,
+    def * = (facebookId, name, imagePath, description, facebookUrl, websites, hasTracks, likes,
+      country).shaped <> (
+      { case (facebookId, name, imagePath, description, facebookUrl, websites, hasTracks, likes, country) =>
+        Artist(facebookId, name, imagePath, description, facebookUrl, optionStringToSet(websites), hasTracks,
           likes, country)
       }, { artist: Artist =>
-      Some((artist.id, artist.facebookId, artist.name, artist.imagePath, artist.description, artist.facebookUrl,
+      Some((artist.facebookId, artist.name, artist.imagePath, artist.description, artist.facebookUrl,
         Option(artist.websites.mkString(",")), artist.hasTracks, artist.likes, artist.country))
     })
   }
 
   class Events(tag: Tag) extends Table[Event](tag, "events") {
-    def id = column[Long]("eventid", O.PrimaryKey, O.AutoInc)
-    def facebookId = column[Option[String]]("facebookid")
+    def id = column[Long]("event_id", O.PrimaryKey, O.AutoInc)
+    def facebookId = column[String]("event_facebook_id", O.PrimaryKey)
     def name = column[String]("name")
     def description = column[Option[String]]("description")
     def startTime = column[DateTime]("starttime")
@@ -73,67 +73,68 @@ trait MyDBTableDefinitions {
   }
 
   class EventsPlaces(tag: Tag) extends Table[EventPlaceRelation](tag, "eventsplaces") {
-    def eventId = column[Long]("eventid")
-    def placeId = column[Long]("placeid")
+    def eventId = column[String]("event_id")
+    def placeFacebookUrl = column[String]("placefacebookurl")
 
-    def * = (eventId, placeId) <> ((EventPlaceRelation.apply _).tupled, EventPlaceRelation.unapply)
+    def * = (eventId, placeFacebookUrl) <> ((EventPlaceRelation.apply _).tupled, EventPlaceRelation.unapply)
 
-    def aFK = foreignKey("eventid", eventId, events)(_.id, onDelete = ForeignKeyAction.Cascade)
-    def bFK = foreignKey("placeid", placeId, places)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def aFK = foreignKey("event_id", eventId, events)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
+    def bFK =
+      foreignKey("placefacebookurl", placeFacebookUrl, places)(_.facebookUrl, onDelete = ForeignKeyAction.Cascade)
   }
 
   class EventsAddresses(tag: Tag) extends Table[EventAddressRelation](tag, "eventsaddresses") {
-    def eventId = column[Long]("eventid")
+    def eventId = column[String]("event_id")
     def addressId = column[Long]("addressid")
 
     def * = (eventId, addressId) <> ((EventAddressRelation.apply _).tupled, EventAddressRelation.unapply)
 
-    def aFK = foreignKey("eventid", eventId, events)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def aFK = foreignKey("event_id", eventId, events)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
     def bFK = foreignKey("addressid", addressId, addresses)(_.id, onDelete = ForeignKeyAction.Cascade)
   }
 
   class EventsOrganizers(tag: Tag) extends Table[EventOrganizerRelation](tag, "eventsorganizers") {
-    def eventId = column[Long]("eventid")
-    def organizerId = column[Long]("organizerid")
+    def eventId = column[String]("event_id")
+    def organizerUrl = column[String]("organizerurl")
 
-    def * = (eventId, organizerId) <> ((EventOrganizerRelation.apply _).tupled, EventOrganizerRelation.unapply)
+    def * = (eventId, organizerUrl) <> ((EventOrganizerRelation.apply _).tupled, EventOrganizerRelation.unapply)
 
-    def aFK = foreignKey("eventid", eventId, events)(_.id, onDelete = ForeignKeyAction.Cascade)
-    def bFK = foreignKey("organizerid", organizerId, organizers)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def aFK = foreignKey("event_id", eventId, events)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
+    def bFK = foreignKey("organizerurl", organizerUrl, organizers)(_.facebookUrl, onDelete = ForeignKeyAction.Cascade)
   }
 
   class EventsArtists(tag: Tag) extends Table[EventArtistRelation](tag, "eventsartists") {
-    def eventId = column[Long]("eventid")
-    def artistId = column[Long]("artistid")
+    def eventId = column[String]("event_id")
+    def artistId = column[String]("artistid")
 
     def * = (eventId, artistId) <> ((EventArtistRelation.apply _).tupled, EventArtistRelation.unapply)
 
-    def aFK = foreignKey("eventid", eventId, events)(_.id, onDelete = ForeignKeyAction.Cascade)
-    def bFK = foreignKey("artistid", artistId, artists)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def aFK = foreignKey("event_id", eventId, events)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
+    def bFK = foreignKey("artistid", artistId, artists)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
   }
 
   class Places(tag: Tag) extends Table[Place](tag, "places") {
     def id = column[Long]("placeid", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
-    def facebookId = column[Option[String]]("facebookid")
+    def facebookId = column[String]("facebookid")
+    def facebookUrl = column[String]("facebookurl")
     def description = column[Option[String]]("description")
     def websites = column[Option[String]]("websites")
     def capacity = column[Option[Int]]("capacity")
     def openingHours = column[Option[String]]("openinghours")
     def imagePath = column[Option[String]]("imagepath")
     def addressId = column[Option[Long]]("addressid")
-    def linkedOrganizerId = column[Option[Long]]("linkedorganizerid")
     def likes = column[Option[Long]]("likes")
-    def lastUpdate = column[DateTime]("last_update")
 
-    def * = (id.?, name, facebookId, description, websites, capacity, openingHours,
-      imagePath, addressId, linkedOrganizerId, likes) <> ((Place.apply _).tupled, Place.unapply)
+    def * = (id.?, name, facebookId, facebookUrl, description, websites, capacity, openingHours,
+      imagePath, addressId, likes) <> ((Place.apply _).tupled, Place.unapply)
   }
   lazy val places = TableQuery[Places]
 
   class Organizers(tag: Tag) extends Table[Organizer](tag, "organizers") {
     def id = column[Long]("organizerid", O.PrimaryKey, O.AutoInc)
-    def facebookId = column[Option[String]]("facebookid")
+    def facebookId = column[String]("facebookid")
+    def facebookUrl = column[String]("facebookurl")
     def name = column[String]("name")
     def description = column[Option[String]]("description")
     def addressId = column[Option[Long]]("addressid")
@@ -142,11 +143,11 @@ trait MyDBTableDefinitions {
     def websites = column[Option[String]]("websites")
     def verified = column[Boolean]("verified")
     def imagePath = column[Option[String]]("imagepath")
-    def linkedPlaceId = column[Option[Long]]("placeid")
+    def linkedPlaceUrl = column[Option[String]]("placeurl")
     def likes = column[Option[Long]]("likes")
 
-    def * = (id.?, facebookId, name, description, addressId, phone, publicTransit, websites, verified, imagePath,
-      linkedPlaceId, likes) <> ((Organizer.apply _).tupled, Organizer.unapply)
+    def * = (id.?, facebookId, facebookUrl, name, description, addressId, phone, publicTransit, websites, verified,
+      imagePath, linkedPlaceUrl, likes) <> ((Organizer.apply _).tupled, Organizer.unapply)
 
     def address = foreignKey("addressFk", addressId, addresses)(_.id.?, onDelete = ForeignKeyAction.Cascade)
   }
@@ -170,7 +171,7 @@ trait MyDBTableDefinitions {
   }
 
   class EventsCounts(tag: Tag) extends Table[Counts](tag, "eventscounts") {
-    def eventId = column[String]("eventid", O.PrimaryKey)
+    def eventFacebookId = column[String]("event_facebook_id", O.PrimaryKey)
     def attending_count = column[Long]("attending_count")
     def declined_count = column[Long]("declined_count")
     def interested_count = column[Long]("interested_count")
@@ -178,15 +179,15 @@ trait MyDBTableDefinitions {
     def noreply_count = column[Long]("noreply_count")
 
     def * = (
-      eventId,
+      eventFacebookId,
       attending_count,
       declined_count,
       interested_count,
       maybe_count,
       noreply_count) <>
       ((Counts.apply _).tupled, Counts.unapply)
-    
-    def afk = foreignKey("facebookid", eventId, events)(_.facebookId.get)
+
+    def afk = foreignKey("facebookid", eventFacebookId, events)(_.facebookId)
   }
   lazy val eventsCounts = TableQuery[EventsCounts]
 

@@ -13,7 +13,7 @@ final case class EventWithRelations(event: Event,
                                     counts: Option[Counts] = None)
 
 final case class Event(id: Option[Long] = None,
-                       facebookId: Option[String] = None,
+                       facebookId: String,
                        name: String,
                        description: Option[String] = None,
                        startTime: DateTime,
@@ -31,20 +31,21 @@ final case class Address(id: Option[Long] = None,
 
 final case class Place(id: Option[Long] = None,
                        name: String,
-                       facebookId: Option[String] = None,
+                       facebookId: String,
+                       facebookUrl: String,
                        description: Option[String] = None,
                        websites: Option[String] = None,
                        capacity: Option[Int] = None,
                        openingHours: Option[String] = None,
                        imagePath: Option[String] = None,
                        addressId: Option[Long] = None,
-                       linkedOrganizerId: Option[Long] = None,
                        likes: Option[Long] = None)
 
 final case class PlaceWithAddress(place: Place, maybeAddress: Option[Address] = None)
 
 final case class Organizer(id: Option[Long] = None,
-                           facebookId: Option[String] = None,
+                           facebookId: String,
+                           facebookUrl: String,
                            name: String,
                            description: Option[String] = None,
                            addressId: Option[Long] = None,
@@ -53,13 +54,12 @@ final case class Organizer(id: Option[Long] = None,
                            websites: Option[String] = None,
                            verified: Boolean = false,
                            imagePath: Option[String] = None,
-                           linkedPlaceId: Option[Long] = None,
+                           linkedPlaceUrl: Option[String] = None,
                            likes: Option[Long] = None)
 
 final case class OrganizerWithAddress(organizer: Organizer, maybeAddress: Option[Address] = None)
 
-final case class Artist(id: Option[Long] = None,
-                        facebookId: Option[String] = None,
+final case class Artist(facebookId: String,
                         name: String,
                         imagePath: Option[String] = None,
                         description: Option[String] = None,
