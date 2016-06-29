@@ -1,0 +1,3 @@
+-- alter table events drop COLUMN geographicpoint;
+-- alter table places drop COLUMN geographicpoint;
+-- alter table organizers drop COLUMN geographicpoint;
