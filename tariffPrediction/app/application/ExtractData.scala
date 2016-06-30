@@ -1,38 +1,37 @@
 package application
 
-import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 class ExtractData extends SparkCommons {
-  val databaseURL = "jdbc:postgresql://dbHostTest2:5432/tests?user=simon&password=root"
+  val databaseURL = "jdbc:postgresql://dbHost:5432/ticketapp?user=simon&password=root"
 
-  def extractRddLabeledPoints(sQLContext: SQLContext, sparkContext: SparkContext): RDD[LabeledPoint] = {
-    val labeledPoints = extractLabeledPoints(extractDataFrame(sqlContext).cache()).toSeq
+  def extractRddLabeledPoints(): RDD[LabeledPoint] = {
+    val labeledPoints = extractLabeledPoints(extractDataFrame().cache()).toSeq
 
     sparkContext.parallelize[LabeledPoint](labeledPoints)
   }
 
-  private def extractDataFrame(sQLContext: SQLContext): DataFrame = sqlContext.read.format("jdbc").options(
+  private def extractDataFrame(): DataFrame = sqlContext.read.format("jdbc").options(
     Map("url" -> databaseURL,
       "dbtable" ->
         """(
-        SELECT events.facebookid, events.name, events.tariffrange,
+        SELECT events.event_facebook_id, events.tariffrange,
           eventscounts.attending_count, eventscounts.declined_count, eventscounts.interested_count,
           eventscounts.maybe_count, eventscounts.noreply_count,
           organizers.organizerid, organizers.likes as organizerlikes,
           places.placeid, places.capacity, places.likes as placelikes,
-          artists.artistid, artists.likes as artistlikes
+          artists.facebookId, artists.likes as artistlikes
           FROM events
-        LEFT JOIN eventscounts on eventscounts.eventid = events.facebookId
-        LEFT JOIN eventsorganizers on eventsorganizers.eventid = events.eventid
-          LEFT JOIN organizers on eventsorganizers.organizerid = organizers.organizerid
-        LEFT JOIN eventsartists on eventsartists.eventid = events.eventid
-          LEFT JOIN artists on eventsartists.artistid = artists.artistid
-        LEFT JOIN eventsplaces on eventsplaces.eventid = events.eventid
-          LEFT JOIN places on eventsplaces.placeid = places.placeid
+        LEFT JOIN eventscounts on eventscounts.event_facebook_id = events.event_facebook_id
+        LEFT JOIN eventsorganizers on eventsorganizers.event_id = events.event_facebook_id
+          LEFT JOIN organizers on eventsorganizers.organizerUrl = organizers.facebookUrl
+        LEFT JOIN eventsartists on eventsartists.event_id = events.event_facebook_id
+          LEFT JOIN artists on eventsartists.artistId = artists.facebookid
+        LEFT JOIN eventsplaces on eventsplaces.event_id = events.event_facebook_id
+          LEFT JOIN places on eventsplaces.placeFacebookUrl = places.facebookUrl
         WHERE events.tariffrange is not null) df""")
   ).load()
 
@@ -41,10 +40,10 @@ class ExtractData extends SparkCommons {
     val tariffRange: String = extractTariffRange(event, eventRows)
 
     val maxTariff = extractMaxTariff(tariffRange)
-    if (maxTariff >= 1600) {
+    if (maxTariff >= 180 || maxTariff <= 2) {
       None
     } else {
-      val artistLikesAverage = extractLikesAverage(eventRows, "artist")
+      val artistLikesAverage = extractArtistLikesAverage(eventRows)
       val organizerLikesAverage = extractLikesAverage(eventRows, "organizer")
       val placeLikesAverage = extractLikesAverage(eventRows, "place")
 
@@ -76,7 +75,7 @@ class ExtractData extends SparkCommons {
 
   private def groupEvents(df: DataFrame): Map[String, Array[Row]] = df
     .collect()
-    .groupBy(row => row.getString(row.fieldIndex("facebookid")))
+    .groupBy(row => row.getString(row.fieldIndex("event_facebook_id")))
 
   private def extractPlaceCapacity(firstEventRow: Row): Double = {
     val placeCapacityIndex: Int = firstEventRow.fieldIndex("capacity")
@@ -102,12 +101,30 @@ class ExtractData extends SparkCommons {
     else 0
   }
 
+  private def extractArtistLikesAverage(eventRows: Array[Row]): Double = {
+    val idsAndSum = eventRows.foldLeft(Seq.empty[String], 0.0)((idsAndSumTmp, row) => {
+      val idIndex = row.fieldIndex("facebookid")
+      if (row.isNullAt(idIndex)) {
+        idsAndSumTmp
+      } else {
+        val likesIndex = row.fieldIndex("artistlikes")
+        if (row.isNullAt(likesIndex)) idsAndSumTmp
+        else (idsAndSumTmp._1 :+ row.getString(idIndex), idsAndSumTmp._2 + row.getInt(likesIndex).toDouble)
+      }
+    })
+
+    val numberOfLikes = idsAndSum._1.length
+
+    if (numberOfLikes > 0) idsAndSum._2 / numberOfLikes
+    else 0
+  }
+
   private def extractMaxTariff(tariff: String): Double = {
     val indexOfSeparator = tariff.indexOf("-")
     tariff.drop(indexOfSeparator + 1).toDouble
   }
 
-  private def extractLikesAverage(sQLContext: SQLContext, tableName: String): Long = sqlContext
+  private def extractTotalLikesAverage(sQLContext: SQLContext, tableName: String): Long = sqlContext
     .read
     .format("jdbc")
     .options(Map(

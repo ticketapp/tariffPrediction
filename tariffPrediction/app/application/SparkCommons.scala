@@ -11,6 +11,6 @@ trait SparkCommons {
       .set("spark.logConf", "true")
   }
 
-  lazy val sc = SparkContext.getOrCreate(conf)
-  lazy val sqlContext = new SQLContext(sc)
+  lazy val sparkContext = SparkContext.getOrCreate(conf)
+  lazy val sqlContext = new SQLContext(sparkContext)
 }
