@@ -12,10 +12,12 @@ import slick.model.ForeignKeyAction
 
 
 case class EventArtistRelation(eventId: String, artistId: String)
-case class EventPlaceRelation(eventId: String, placeId: String)
+case class EventPlaceRelation(eventId: String, placeFacebookUrl: String)
 case class EventAddressRelation(eventId: String, addressId: Long)
 case class EventOrganizerRelation(eventId: String, organizerId: String)
 case class FrenchCity(city: String, geographicPoint: Geometry)
+case class ArtistGenreRelation(artistId: String, genreId: Int, weight: Int = 0)
+case class EventGenreRelation(eventId: String, genreId: Int)
 
 trait MyDBTableDefinitions {
 
@@ -124,10 +126,12 @@ trait MyDBTableDefinitions {
     def openingHours = column[Option[String]]("openinghours")
     def imagePath = column[Option[String]]("imagepath")
     def addressId = column[Option[Long]]("addressid")
+    def linkedOrganizerUrl = column[Option[String]]("linkedorganizerurl")
     def likes = column[Option[Long]]("likes")
+    def lastUpdate = column[DateTime]("last_update")
 
     def * = (id.?, name, facebookId, facebookUrl, description, websites, capacity, openingHours,
-      imagePath, addressId, likes) <> ((Place.apply _).tupled, Place.unapply)
+      imagePath, addressId, linkedOrganizerUrl, likes) <> ((Place.apply _).tupled, Place.unapply)
   }
   lazy val places = TableQuery[Places]
 
@@ -190,6 +194,38 @@ trait MyDBTableDefinitions {
     def afk = foreignKey("facebookid", eventFacebookId, events)(_.facebookId)
   }
   lazy val eventsCounts = TableQuery[EventsCounts]
+
+  class Genres(tag: Tag) extends Table[Genre](tag, "genres") {
+    def id = column[Int]("genreid", O.PrimaryKey, O.AutoInc)
+    def name = column[String]("name")
+    def icon = column[Char]("icon")
+
+    def * = (id.?, name, icon) <> ((Genre.apply _).tupled, Genre.unapply)
+  }
+  lazy val genres = TableQuery[Genres]
+
+  class ArtistsGenres(tag: Tag) extends Table[ArtistGenreRelation](tag, "artistsgenres") {
+    def artistFacebookId = column[String]("artistid")
+    def genreId = column[Int]("genreid")
+    def weight = column[Int]("weight", O.Default(0))
+
+    def * = (artistFacebookId, genreId, weight) <> ((ArtistGenreRelation.apply _).tupled, ArtistGenreRelation.unapply)
+
+    def aFK = foreignKey("artistid", artistFacebookId, artists)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
+    def bFK = foreignKey("genreid", genreId, genres)(_.id, onDelete = ForeignKeyAction.Cascade)
+  }
+  lazy val artistsGenres = TableQuery[ArtistsGenres]
+
+  class EventsGenres(tag: Tag) extends Table[EventGenreRelation](tag, "eventsgenres") {
+    def eventId = column[String]("event_id")
+    def genreId = column[Int]("genreid")
+
+    def * = (eventId, genreId) <> ((EventGenreRelation.apply _).tupled, EventGenreRelation.unapply)
+
+    def aFK = foreignKey("event_id", eventId, events)(_.facebookId, onDelete = ForeignKeyAction.Cascade)
+    def bFK = foreignKey("genreid", genreId, genres)(_.id, onDelete = ForeignKeyAction.Cascade)
+  }
+  lazy val eventsGenres = TableQuery[EventsGenres]
 
   lazy val artists = TableQuery[Artists]
   lazy val events = TableQuery[Events]

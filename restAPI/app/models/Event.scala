@@ -1,6 +1,5 @@
 package models
 
-import com.vividsolutions.jts.geom.{Coordinate, Geometry, GeometryFactory}
 import org.joda.time.DateTime
 
 import scala.language.postfixOps
@@ -9,6 +8,7 @@ final case class EventWithRelations(event: Event,
                                     organizers: Seq[OrganizerWithAddress] = Vector.empty,
                                     artists: Seq[Artist] = Vector.empty,
                                     places: Seq[PlaceWithAddress] = Vector.empty,
+                                    genres: Seq[Genre] = Vector.empty,
                                     addresses: Seq[Address] = Vector.empty,
                                     counts: Option[Counts] = None)
 
@@ -22,6 +22,9 @@ final case class Event(id: Option[Long] = None,
                        tariffRange: Option[String] = None,
                        ticketSellers: Option[String] = None,
                        imagePath: Option[String] = None)
+
+@SerialVersionUID(42L)
+final case class EventAndPlaceFacebookUrl(event: EventWithRelations, placeFacebookUrl: String)
 
 final case class Address(id: Option[Long] = None,
                          city: Option[String] = None,
@@ -39,9 +42,17 @@ final case class Place(id: Option[Long] = None,
                        openingHours: Option[String] = None,
                        imagePath: Option[String] = None,
                        addressId: Option[Long] = None,
+                       linkedOrganizerUrl: Option[String] = None,
                        likes: Option[Long] = None)
 
+@SerialVersionUID(42L)
 final case class PlaceWithAddress(place: Place, maybeAddress: Option[Address] = None)
+
+@SerialVersionUID(42L)
+final case class UpdatePlace(place: PlaceWithAddress)
+
+@SerialVersionUID(42L)
+final case class GetPlace(offset: Long, notUpdatedSince: DateTime)
 
 final case class Organizer(id: Option[Long] = None,
                            facebookId: String,
@@ -68,6 +79,19 @@ final case class Artist(facebookId: String,
                         hasTracks: Boolean = false,
                         likes: Option[Long] = None,
                         country: Option[String] = None)
+
+final case class ArtistWithWeightedGenres(artist: Artist, genres: Seq[GenreWithWeight] = Seq.empty)
+
+@SerialVersionUID(42L)
+final case class EventIdArtistsAndGenres(eventId: String,
+                                         artistsWithWeightedGenres: Seq[ArtistWithWeightedGenres],
+                                         genresWithWeight: Seq[Genre])
+
+case class Genre(id: Option[Int] = None, name: String, icon: Char = 'a') {
+  require(name.nonEmpty, "It is forbidden to create a genre without a name.")
+}
+
+case class GenreWithWeight(genre: Genre, weight: Int = 1)
 
 final case class Counts(eventFacebookId: String,
                         attending_count: Long,

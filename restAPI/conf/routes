@@ -1,3 +1,5 @@
 POST  /                     @application.MainController.predict
 
 GET   /events/:facebookId   @application.MainController.findEvent(facebookId: String)
+
+GET   /whatMyAddress        @application.MainController.whatMyAddress

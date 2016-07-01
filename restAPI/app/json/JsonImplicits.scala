@@ -1,9 +1,18 @@
-package models
+package json
 
 import application.PredictionLabels
-import play.api.libs.json.{Format, Json}
+import models._
+import play.api.libs.json.{JsResult, JsSuccess, JsValue, _}
 
-trait jsonImplicits {
+trait JsonImplicits {
+  implicit object CharWrites extends Writes[Char] {
+    def writes(char: Char): JsString = JsString(char.toString)
+  }
+
+  implicit object CharReads extends Reads[Char] {
+    def reads(char: JsValue): JsResult[Char] = JsSuccess(Json.stringify(char)(1))
+  }
+  implicit val genreFormat = Json.format[Genre]
   implicit val countsFormat: Format[Counts] = Json.format[Counts]
   implicit val artistFormat: Format[Artist] = Json.format[Artist]
   implicit val addressFormat = Json.format[Address]
