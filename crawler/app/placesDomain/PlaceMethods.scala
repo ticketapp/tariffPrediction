@@ -4,10 +4,10 @@ import javax.inject.Inject
 
 import APIs.FacebookAPI.FacebookPlace
 import APIs.{FacebookAPI, FormatResponses}
-import addresses.{Address, SortByDistanceToPoint}
 import com.vividsolutions.jts.geom.Geometry
 import json.JsonHelper._
 import logger.LoggerHelper
+import models.{Address, Place, PlaceWithAddress}
 import services._
 import websites.Websites._
 
@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 class PlaceMethods @Inject() (facebookAPI: FacebookAPI, implicit val ec: ExecutionContext)
-    extends Utilities with SortByDistanceToPoint with LoggerHelper with FormatResponses {
+    extends Utilities with LoggerHelper with FormatResponses {
 
   def getPlace(facebookId: String): Future[PlaceWithAddress] = facebookAPI.getPlace(facebookId) map { place =>
     val facebookPlace = fromJsValueTo[FacebookPlace](place)
@@ -40,7 +40,6 @@ class PlaceMethods @Inject() (facebookAPI: FacebookAPI, implicit val ec: Executi
         name = facebookPlace.name,
         facebookId = facebookPlace.id.get,
         facebookUrl = facebookPlace.link.getOrElse(facebookPlace.id.get),
-        geographicPoint = geographicPoint,
         description = facebookPlace.about,
         websites = normalizeUrl(facebookPlace.website),
         capacity = None,

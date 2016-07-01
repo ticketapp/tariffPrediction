@@ -3,9 +3,9 @@ package artistsDomain
 import javax.inject.Inject
 
 import APIs.FacebookAPI.{Cover, FacebookArtist}
-import APIs.{FacebookAPI, FormatResponses, SoundCloudAPI}
-import genresDomain.{Genre, GenreMethods, GenreWithWeight}
+import APIs.{FacebookAPI, FormatResponses}
 import logger.LoggerHelper
+import models.{Artist, ArtistWithWeightedGenres}
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -16,31 +16,14 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
-final case class Artist(facebookId: String,
-                        name: String,
-                        imagePath: Option[String] = None,
-                        description: Option[String] = None,
-                        facebookUrl: String,
-                        websites: Set[String] = Set.empty,
-                        hasTracks: Boolean = false,
-                        likes: Option[Long] = None,
-                        country: Option[String] = None)
-
-final case class ArtistWithWeightedGenres(artist: Artist, genres: Seq[GenreWithWeight] = Seq.empty)
-
 final case class PatternAndArtist(searchPattern: String, artistWithWeightedGenres: ArtistWithWeightedGenres)
 
 @SerialVersionUID(42L)
-final case class EventIdArtistsAndGenres(eventId: String,
-                                         artistsWithWeightedGenres: Seq[ArtistWithWeightedGenres],
-                                         genresWithWeight: Seq[Genre])
+final case class EventIdArtists(eventId: String, artistsWithWeightedGenres: Seq[ArtistWithWeightedGenres])
 
-class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
-                              websites: Websites,
+class ArtistMethods @Inject()(websites: Websites,
                               facebookAPI: FacebookAPI)
-    extends artistsAndOptionalGenresToArtistsWithWeightedGenresTrait
-    with GenreMethods
-    with LoggerHelper
+    extends LoggerHelper
     with FormatResponses {
 
   def normalizeArtistName(artistName: String): String = artistName
@@ -117,23 +100,6 @@ class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
       artists
   }
 
-  def getFacebookArtistsByWebsites(websites: Set[String]): Future[Set[ArtistWithWeightedGenres]] = Future.sequence(
-    websites.map {
-      case website if website contains "facebook" =>
-        getFacebookArtistByFacebookUrl(website)
-
-      case website if website contains "soundcloud" =>
-        soundCloudAPI.getFacebookUrlBySoundCloudUrl(website) map { response =>
-        readMaybeFacebookUrl(response.json)
-      } flatMap {
-        case None => Future.successful(None)
-        case Some(facebookUrl) => getFacebookArtistByFacebookUrl(facebookUrl)
-      }
-
-      case _ => Future.successful(None)
-    }
-  ) map(_.flatten)
-
   def readMaybeFacebookUrl(soundCloudWebProfilesResponse: JsValue): Option[String] = {
     val facebookUrlReads = (
       (__ \ "url").read[String] and
@@ -194,6 +160,9 @@ class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
     }
   }
 
+ def getFacebookArtistByFacebookUrls(urls: Set[String]): Future[Set[ArtistWithWeightedGenres]] =
+   Future.sequence(urls map(url => getFacebookArtistByFacebookUrl(url))).map(_.flatten)
+
   def splitArtistNamesInTitle(title: String): List[String] = {
     "@.*".r
       .replaceFirstIn(title, "")
@@ -222,7 +191,6 @@ class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
 
     if (category.equalsIgnoreCase("Musician/Band") || category.equalsIgnoreCase("Artist")) {
       val country: Option[String] = extractCountry(facebookArtist)
-      val genres: Set[GenreWithWeight] = extractGenres(facebookArtist.genre)
 
       websites.fromWebsiteStringToSet(facebookArtist.website) map { websites =>
         val artist = Artist(
@@ -235,7 +203,7 @@ class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
           likes = Option(facebookArtist.fan_count),
           country = country)
 
-        Option(ArtistWithWeightedGenres(artist = artist, genres = genres.toSeq))
+        Option(ArtistWithWeightedGenres(artist = artist))
       }
     } else {
       Future.successful(None)
@@ -265,11 +233,6 @@ class ArtistMethods @Inject()(soundCloudAPI: SoundCloudAPI,
         log(e)
         Future.successful(Seq.empty)
     }
-  }
-
-  def extractGenres(maybeGenres: Option[String]): Set[GenreWithWeight] = maybeGenres match {
-    case Some(genres) => genresStringToGenresSet(genres) map (GenreWithWeight.apply(_))
-    case None => Set.empty
   }
 
   def extractCountry(facebookArtist: FacebookArtist): Option[String] = facebookArtist.location match {

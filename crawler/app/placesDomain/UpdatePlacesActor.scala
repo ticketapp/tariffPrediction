@@ -3,14 +3,15 @@ package placesDomain
 import javax.inject.Inject
 
 import akka.actor.{Actor, ActorLogging, PoisonPill}
-import application.IsFinished
 import com.google.inject.assistedinject.Assisted
 import logger.ActorsLoggerHelper
 import play.api.libs.concurrent.InjectedActorSupport
 import play.api.libs.ws.WSClient
 import akka.pattern.ask
+import application.MainSupervisor.IsFinished
 import facebookLimit.FacebookLimit
 import json.JsonHelper.FacebookRequestLimit
+import models.{GetPlace, PlaceWithAddress, UpdatePlace}
 import org.joda.time.DateTime
 import placesDomain.UpdatePlacesSupervisor.IncrementCounter
 

@@ -4,8 +4,7 @@ import javax.inject.Inject
 
 import akka.actor._
 import akka.pattern.{Backoff, BackoffSupervisor}
-import application.IsFinished
-import application.MainSupervisor.UpdatePlacesFinishedAt
+import application.MainSupervisor.{IsFinished, UpdatePlacesFinishedAt}
 import com.google.inject.assistedinject.Assisted
 import json.JsonHelper.FacebookRequestLimit
 import org.joda.time.DateTime

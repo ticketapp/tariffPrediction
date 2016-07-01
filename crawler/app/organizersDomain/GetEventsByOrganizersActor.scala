@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging}
 import akka.pattern.ask
 import eventsDomain.GetFacebookEventActor
 import GetFacebookEventActor.GetAndSaveFacebookEvent
-import application.IsFinished
+import application.MainSupervisor.IsFinished
 import com.google.inject.assistedinject.Assisted
 import eventsDomain.EventMethods
 import facebookLimit.FacebookLimit
@@ -17,6 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import json.JsonHelper._
+import models.OrganizerWithAddress
 
 object GetEventsByOrganizersActor {
   trait Factory {

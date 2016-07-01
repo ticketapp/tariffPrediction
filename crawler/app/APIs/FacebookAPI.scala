@@ -2,7 +2,6 @@ package APIs
 
 import javax.inject.Inject
 
-import genresDomain.GenreMethods
 import play.api.libs.json._
 import play.api.libs.ws.WSClient
 
@@ -71,7 +70,7 @@ object FacebookAPI {
   implicit val facebookOrganizerFormat = Json.format[FacebookOrganizer]
 }
 
-class FacebookAPI @Inject() (wSClient: WSClient, implicit val ec: ExecutionContext) extends GenreMethods {
+class FacebookAPI @Inject() (wSClient: WSClient, implicit val ec: ExecutionContext) {
   private val token = "1434764716814175|087b04548922a278a697b4dbb709dc56"
   private val apiVersion = "v2.6"
   private val baseUrl = "https://graph.facebook.com/" + apiVersion + "/"

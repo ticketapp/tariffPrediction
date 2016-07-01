@@ -4,12 +4,13 @@ import javax.inject.Inject
 
 import akka.actor.{Actor, ActorLogging, PoisonPill}
 import akka.pattern.ask
-import application.IsFinished
+import application.MainSupervisor.IsFinished
 import com.google.inject.assistedinject.Assisted
 import eventsDomain.EventMethods
 import eventsDomain.GetFacebookEventActor.GetAndSaveFacebookEventWithoutItsPlace
 import facebookLimit.FacebookLimit
 import json.JsonHelper._
+import models.PlaceWithAddress
 import placesDomain.EventsByPlacesSupervisor.IncrementCounter
 import play.api.libs.concurrent.InjectedActorSupport
 import play.api.libs.ws.WSClient

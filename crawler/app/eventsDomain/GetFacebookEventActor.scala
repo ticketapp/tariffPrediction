@@ -12,6 +12,7 @@ import application.ClaudeAddressActor.WhatIsClaudeAddress
 import facebookLimit.FacebookLimit
 import json.JsonHelper.FacebookRequestLimit
 import logger.ActorsLoggerHelper
+import models.{EventAndPlaceFacebookUrl, EventWithRelations}
 import play.api.libs.concurrent.InjectedActorSupport
 import play.api.libs.ws.WSClient
 

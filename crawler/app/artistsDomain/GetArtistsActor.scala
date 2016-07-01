@@ -4,14 +4,13 @@ import javax.inject.Inject
 
 import akka.actor.{Actor, ActorLogging}
 import akka.pattern.ask
-import application.IsFinished
+import application.MainSupervisor.IsFinished
 import artistsDomain.ArtistsSupervisor.IncrementCounter
 import com.google.inject.assistedinject.Assisted
-import eventsDomain.EventWithRelations
 import facebookLimit.FacebookLimit
-import genresDomain.Genre
 import json.JsonHelper._
 import logger.ActorsLoggerHelper
+import models.{ArtistWithWeightedGenres, EventWithRelations}
 import play.api.libs.json.JsValue
 import services.Utilities
 import websites.{UnshortLinksFactory, Websites}
@@ -79,11 +78,11 @@ class GetArtistsActor @Inject() (unshortLinksFactory: UnshortLinksFactory,
     IsFinished(false)
   }
 
-  def getAndSaveArtistsAndGenres(event: EventWithRelations): Future[IsFinished] = getArtistsAndGenres(event)
-    .map { artistsAndGenres =>
-    if (artistsAndGenres._1.nonEmpty) {
+  def getAndSaveArtistsAndGenres(event: EventWithRelations): Future[IsFinished] = getArtists(event)
+    .map { artists =>
+    if (artists.nonEmpty) {
       claudeArtistActor map { actorRef =>
-        actorRef ! EventIdArtistsAndGenres(event.event.facebookId, artistsAndGenres._1, artistsAndGenres._2)
+        actorRef ! EventIdArtists(event.event.facebookId, artists)
       }
     }
     IsFinished(false)
@@ -92,16 +91,12 @@ class GetArtistsActor @Inject() (unshortLinksFactory: UnshortLinksFactory,
     IsFinished(false)
   }
 
-  def getArtistsAndGenres(event: EventWithRelations): Future[(Seq[ArtistWithWeightedGenres], Seq[Genre])] = for {
+  def getArtists(event: EventWithRelations): Future[Seq[ArtistWithWeightedGenres]] = for {
     normalizedWebsites <- websites.getUnshortedNormalizedWebsites(event.event.description)
-    artistsFromDescription <- artistMethods.getFacebookArtistsByWebsites(normalizedWebsites)
+    artistsFromDescription <- artistMethods.getFacebookArtistByFacebookUrls(normalizedWebsites)
     artistsFromTitle <- artistMethods.getEventuallyArtistsInEventTitle(event.event.name, normalizedWebsites)
     nonEmptyArtists = (artistsFromDescription.toVector ++ artistsFromTitle).distinct
-    artistGenres = nonEmptyArtists.flatMap(_.genres map(_.genre))
-    //    overGenres <- genreMethods.findOverGenres(artistGenres)
-    //    genres = (artistGenres ++ overGenres).distinct
-    genres = artistGenres.distinct
-  } yield (nonEmptyArtists, genres)
+  } yield nonEmptyArtists
 
   override def receive: Receive = {
     case offset: Long  => startToFindArtistsForEvent(offset)

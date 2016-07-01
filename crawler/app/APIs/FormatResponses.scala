@@ -1,15 +1,13 @@
 package APIs
 
 import APIs.FacebookAPI.{Cover, Location}
-import addresses.{Address, GeographicPointTrait}
 import com.vividsolutions.jts.geom.Geometry
+import models.Address
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import websites.Websites._
 
-import scala.util.matching.Regex
-
-trait FormatResponses extends GeographicPointTrait {
+trait FormatResponses {
   def refactorEventOrPlaceName(eventName: String): String = eventName.indexOf(" @") match {
     case -1 => eventName
     case index => eventName.take(index).trim
@@ -39,23 +37,13 @@ trait FormatResponses extends GeographicPointTrait {
         city = location.city,
         zip = location.zip,
         street = location.street,
-        country = location.country,
-        geographicPoint = extractGeographicPointFromLocation(location).getOrElse(antarcticPoint)))
+        country = location.country))
 
     case _ =>
       None
   }
 
-  def extractGeographicPointFromLocation(maybeLocation: Option[Location]): Option[Geometry] = maybeLocation match {
-    case Some(location) => extractGeographicPointFromLocation(location)
-    case _ => None
-  }
-
-  private def extractGeographicPointFromLocation(location: Location): Option[Geometry] =
-    if (Seq(location.latitude, location.longitude).flatten.length == 2)
-      Option(latAndLngToGeographicPoint(location.latitude.get, location.longitude.get))
-    else
-      None
+  def extractGeographicPointFromLocation(maybeLocation: Option[Location]): Option[Geometry] = None
 
   def extractImagePath(maybeCover: Option[Cover]): Option[String] = maybeCover match {
     case Some(cover) => Option(cover.source)

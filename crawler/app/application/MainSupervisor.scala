@@ -30,6 +30,8 @@ object MainSupervisor {
   final case class Stage(offset: Long,
                          hasBeenFinishedOnce: Boolean = false,
                          hasBeenFinishedTwice: Boolean = false)
+
+  final case class IsFinished(boolean: Boolean)
 }
 
 @Singleton
@@ -56,12 +58,12 @@ class MainSupervisor @Inject()(getEventsByPlacesActorFactory: GetEventsByPlacesA
   val claudeAddressActor = injectedChild(claudeAddressActorFactory(ec, wSClient), UUID.randomUUID().toString)
   val claudeAddress = Await.result(claudeAddressActor ? WhatIsClaudeAddress() map(_.asInstanceOf[String]), 10.seconds)
 
-  var eventsByPlacesStage = Stage(offset = 2745)
+  var eventsByPlacesStage = Stage(offset = 0)
   var eventsByOrganizersStage = Stage(offset = 0)
-  var artistsStage = Stage(offset = 1281)
+  var artistsStage = Stage(offset = 0)
   var placesUpdateStage = Stage(offset = 0)
 
-  getArtistsByEvents()
+  getEventsByPlaces()
 
   def getEventsByPlaces(): Unit = {
     Logger.info("Start events by places scheduler")

@@ -4,8 +4,7 @@ import javax.inject.Inject
 
 import akka.actor._
 import akka.pattern.{Backoff, BackoffSupervisor}
-import application.IsFinished
-import application.MainSupervisor.EventsByOrganizersFinishedAt
+import application.MainSupervisor.{EventsByOrganizersFinishedAt, IsFinished}
 import com.google.inject.assistedinject.Assisted
 import eventsDomain.EventMethods
 import json.JsonHelper.FacebookRequestLimit

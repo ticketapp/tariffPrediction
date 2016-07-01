@@ -2,20 +2,12 @@ package json
 
 import java.sql.Timestamp
 
-import addresses.Address
-import artistsDomain.{Artist, ArtistWithWeightedGenres}
-import attendees.Counts
 import com.vividsolutions.jts.geom.Geometry
 import com.vividsolutions.jts.io.{WKTReader, WKTWriter}
-import eventsDomain.{Event, EventAndPlaceFacebookUrl, EventWithRelations}
-import genresDomain.{Genre, GenreWithWeight}
 import logger.LoggerHelper
-import organizersDomain.{Organizer, OrganizerWithAddress}
-import placesDomain.{Place, PlaceWithAddress}
+import models._
 import play.api.Logger
 import play.api.libs.json.{JsNumber, _}
-import tracksDomain.{Track, TrackWithGenres}
-import userDomain.{DBUser, DBUserWithAccessToken}
 
 object JsonHelper extends LoggerHelper {
   final case class FacebookRequestLimit() extends Exception {
@@ -91,8 +83,6 @@ object JsonHelper extends LoggerHelper {
   }
 
   implicit val genreFormat = Json.format[Genre]
-  implicit val trackFormat: Format[Track] = Json.format[Track]
-  implicit val trackWithGenresFormat: Format[TrackWithGenres] = Json.format[TrackWithGenres]
   implicit val artistFormat: Format[Artist] = Json.format[Artist]
   implicit val genreWithWeightFormat = Json.format[GenreWithWeight]
   implicit val artistWithGenresFormat = Json.format[ArtistWithWeightedGenres]
@@ -105,6 +95,4 @@ object JsonHelper extends LoggerHelper {
   implicit val eventFormat = Json.format[Event]
   implicit val eventWithRelationsFormat = Json.format[EventWithRelations]
   implicit val eventAndPlaceFacebookIdFormat: Format[EventAndPlaceFacebookUrl] = Json.format[EventAndPlaceFacebookUrl]
-  implicit val dBUserFormat: Format[DBUser] = Json.format[DBUser]
-  implicit val dBUserWithAccessToken: Format[DBUserWithAccessToken] = Json.format[DBUserWithAccessToken]
 }

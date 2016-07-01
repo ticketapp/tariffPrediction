@@ -2,13 +2,11 @@ package websites
 
 import javax.inject.Inject
 
-import APIs.FacebookAPI
 import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import play.api.libs.ws.WSClient
 import websites.UnshortLinks.Urls
 import akka.pattern.ask
-import organizersDomain.{Organizer, OrganizerWithAddress}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
