@@ -34,12 +34,11 @@
 #
 # Contenu du fichier de sortie :
 #	
-#	#114	NUMA CREW	1442
+#	724677124244103	30
 #
 #	Pour chaque ligne, les informations sont séparer par une tabulation (\t)
-#	1) # + Numéro de l'artiste sur la base de données
-#	2) Nom de l'artiste
-#	3) Nombres de followers
+#	1) L'ID Facebook de l'artiste (présent sur la base de données)
+#	2) Nombres de followers
 #
 # Description des print :
 #
