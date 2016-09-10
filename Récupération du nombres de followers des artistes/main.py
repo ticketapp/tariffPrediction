@@ -60,10 +60,11 @@ import os,sys
 from decimal import *
 
 def search(file, start, end, pprint) :
-	follower_number = -1 ; found = 0 ; error_count = 0
+	total_found = 0
 	f = open(file, 'w')
 	try : 
 		for x in range (start , end) : 
+			follower_number = -1 ; found = 0 ; error_count = 0
 			bdd_info =  bdd_extract(x)
 			if pprint == True :  print "\n#", x , "\t", bdd_info[1],"\n"
 			if bdd_info[0] != "GET_ERROR" :
@@ -78,18 +79,19 @@ def search(file, start, end, pprint) :
 								found +=1
 								if twitter_info[2][y] > follower_number : follower_number = twitter_info[2][y]
 					if follower_number != -1 : 
-						f.write("#"+str(x)+"\t"+bdd_info[0]+"\t"+str(follower_number)+"\n")
+						f.write(bdd_info[2]+"\t"+str(follower_number)+"\n")
+						total_found += 1
 			else : error_count += 1
-			if error_count == 5 : quit_script(x+1, found, f)
-		quit_script(x+1,found,f)					
-	except KeyboardInterrupt: quit_script(x, found, f)
+			if error_count == 5 : quit_script(x+1, total_found, f)
+		quit_script(x+1,total_found,f)					
+	except KeyboardInterrupt: quit_script(x, total_found, f)
 
 
-def quit_script(x, found, f) :
+def quit_script(x, total_found, f) :
 	if (x-start) != 0 : 
-		rate = (Decimal(found) / (Decimal(x)-Decimal(start)) ) * 100
+		rate = (Decimal(total_found) / (Decimal(x)-Decimal(start)) ) * 100
 	else : rate = 0	
-	if pprint == True : print "\n",found,"comptes Twitter trouvé sur", x-start,"artistes\nMatch rate :", float(rate),"%"
+	if pprint == True : print "\n",total_found,"comptes Twitter trouvé sur", x-start,"artistes\nMatch rate :", float(rate),"%"
 	f.close() ; sys.exit()
 
 
