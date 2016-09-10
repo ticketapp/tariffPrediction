@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 # Merwan ROPERS
 #
-# Script permettant l'extraction du nombres de followers et de l'URL renseigné sur les comptes 
-# Twitter étant susceptible d'être le compte officiel des artistes.
-#
 # Script permettant à partir du nom de l'artiste de rechercher les comptes Twitter
-# associés à ce nom et d'en extraire l'URL renseigné sur celui-ci, et le nombres de followers du compte.
+# et d'en extraire l'URL ainsi que le nombres de followers du compte correspondant à la recherche.
 #
 # Mode d'emploi : 
 # Argument : Nom de l'artiste
